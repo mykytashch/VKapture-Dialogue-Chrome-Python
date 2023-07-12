@@ -9,4 +9,4 @@ COPY . .
 
 EXPOSE 5000
 
-CMD ["python", "DialogMasterProject.py"]
+CMD ["python", "VKaptureDialogueChromePython.py"]
