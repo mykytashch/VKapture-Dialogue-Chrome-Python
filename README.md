@@ -1,10 +1,10 @@
-# VKaptureDialogueChromePython
+# VKapture Dialogue 
 
-VKaptureDialogueChromePython is a browser extension that enables the transmission of messages from a chat conversation to a server. The extension facilitates dialog-based surveys by collecting and storing user responses on the server for analysis.
+VKapture Dialogue is a browser extension that enables the transmission of messages from a chat conversation to a server. The extension facilitates dialog-based surveys by collecting and storing user responses on the server for analysis.
 
 ## Message Transmission
 
-The primary functionality of the VKaptureDialogueChromePython is the implementation of message transmission. The extension observes the chat conversation in real-time and sends each new message to the server for storage and analysis. This allows for the seamless collection of user responses and enables efficient data processing.
+The primary functionality of the VKapture Dialogue is the implementation of message transmission. The extension observes the chat conversation in real-time and sends each new message to the server for storage and analysis. This allows for the seamless collection of user responses and enables efficient data processing.
 
 The `observeChat()` function in the JavaScript code is responsible for monitoring the chat conversation. It utilizes the `MutationObserver` API to detect new message nodes added to the chat container. When a new message is detected, the extension extracts the message text and sends it to the server using the `sendResponse()` function. The server then stores the message along with relevant information such as the employee ID, question text, and processed ID.
 
