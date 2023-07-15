@@ -32,27 +32,6 @@
 
 У нас есть готовый дизайн на языке разметки HTML для нашего расширения. 
 
-Кнопка "Отправить случайное сообщение": Отправляет случайное число
-
-Идентификатор кнопки `sendRandomButton`
-
-document.getElementById("sendRandomButton").addEventListener("click", function () {
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    let randomNumber = Math.floor(Math.random() * 10000000000).toString().padStart(10, "0");
-    chrome.tabs.executeScript(tabs[0].id, {
-      code: `
-        var inputField = document.querySelector(".im_editable");
-        if (inputField) {
-          inputField.innerHTML = "${randomNumber}";
-          var event = new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true });
-          inputField.dispatchEvent(event);
-        }
-      `,
-    });
-  });
-});
-
-Наша кнопка `sendRandomButton` является актуальным примером работающего функционала по вводу сообщений в поле для ввода и отправки их нашему собеседнику. 
 
 
 Поле ввода "Вопросник №":  При открытии нашего расширения пользователь должен выбрать одну из коллекции Questions_<EmployeeID> с вопросами из нашей базы данных mongodb указав номер от 1 до 2560
@@ -135,6 +114,28 @@ document.addEventListener("DOMContentLoaded", function() {
   observeChat();
 });
 
+
+Кнопка "Отправить случайное сообщение": Отправляет случайное число
+
+Идентификатор кнопки `sendRandomButton`
+
+document.getElementById("sendRandomButton").addEventListener("click", function () {
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    let randomNumber = Math.floor(Math.random() * 10000000000).toString().padStart(10, "0");
+    chrome.tabs.executeScript(tabs[0].id, {
+      code: `
+        var inputField = document.querySelector(".im_editable");
+        if (inputField) {
+          inputField.innerHTML = "${randomNumber}";
+          var event = new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true });
+          inputField.dispatchEvent(event);
+        }
+      `,
+    });
+  });
+});
+
+Наша кнопка `sendRandomButton` является актуальным примером работающего функционала по вводу сообщений в поле для ввода и отправки их нашему собеседнику. 
 
 
 После получения каждого нового ответа на вопросы должны сохранять прогресс работы над конкретной коллекции ответов. Мы записываем в коллекции State сколько вопросов нам осталось задать, чтобы получить на них ответ в RemainingQuestions. И в самом расширении у нас должно отображаться состояние прохождения опроса. 

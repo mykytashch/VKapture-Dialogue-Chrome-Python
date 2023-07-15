@@ -1,4 +1,11 @@
 
+// Обработчик изменения выбора задержки
+document.getElementById("delaySelect").addEventListener("change", function () {
+  let selectedDelay = document.getElementById("delaySelect").value;
+  // Действия при изменении задержки
+  console.log("Selected delay:", selectedDelay);
+});
+
 
 // Обработчик нажатия кнопки "ОК" для подключения к базе данных вопросов
 
@@ -24,14 +31,6 @@ document.getElementById("loadQuestionsButton").addEventListener("click", functio
 });
 
 
-
-// Обработчик изменения выбора задержки
-document.getElementById("delaySelect").addEventListener("change", function () {
-  let selectedDelay = document.getElementById("delaySelect").value;
-  // Действия при изменении задержки
-  console.log("Selected delay:", selectedDelay);
-});
-
 // Обработчик нажатия кнопки "Продолжить"
 document.getElementById("continueButton").addEventListener("click", function () {
   let employeeID = document.getElementById("EmployeeID").value;
@@ -52,6 +51,7 @@ document.getElementById("continueButton").addEventListener("click", function () 
     })
     .catch(console.error);
 });
+
 
 // Обработчик нажатия кнопки "Приостановить"
 document.getElementById("pauseButton").addEventListener("click", function () {
