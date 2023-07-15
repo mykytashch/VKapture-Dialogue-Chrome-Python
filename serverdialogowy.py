@@ -1,6 +1,5 @@
-from flask import Flask, request, send_file, jsonify
-from pymongo import MongoClient, ASCENDING
-
+from flask import Flask, request, jsonify
+from pymongo import MongoClient
 
 app = Flask(__name__)
 client = MongoClient('mongodb+srv://tosniki91:N25kbverb@clustervkapture.b6tox4s.mongodb.net/')
@@ -15,21 +14,19 @@ def load_state():
     state_collection = db['State']
     state = state_collection.find_one({'EmployeeID': employee_id}, {'_id': 0})
     if state:
-        return {
+        return jsonify({
             'CurrentQuestionID': state.get('CurrentQuestionID'),
             'RemainingQuestions': state.get('RemainingQuestions')
-        }, 200
+        }), 200
     else:
         # Создание нового состояния, если не найдено
-        state_collection.insert_one({
+        new_state = {
             'EmployeeID': employee_id,
             'CurrentQuestionID': 0,
             'RemainingQuestions': 100  # Общее количество вопросов
-        })
-        return {
-            'CurrentQuestionID': 0,
-            'RemainingQuestions': 100
-        }, 200
+        }
+        state_collection.insert_one(new_state)
+        return jsonify(new_state), 200
 
 
 # Обработчик для загрузки вопросов для определенного EmployeeID
