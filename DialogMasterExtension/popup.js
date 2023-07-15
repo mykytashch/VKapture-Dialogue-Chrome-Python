@@ -1,30 +1,18 @@
-// Обработчик нажатия кнопки "Отправить случайное сообщение"
-document.getElementById("sendRandomButton").addEventListener("click", function () {
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    let randomNumber = Math.floor(Math.random() * 10000000000).toString().padStart(10, "0");
-    chrome.tabs.executeScript(tabs[0].id, {
-      code: `
-        var inputField = document.querySelector(".im_editable");
-        if (inputField) {
-          inputField.innerHTML = "${randomNumber}";
-          var event = new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true });
-          inputField.dispatchEvent(event);
-        }
-      `,
-    });
-  });
-});
+
 
 // Обработчик нажатия кнопки "ОК" для подключения к базе данных вопросов
+
 document.getElementById("loadQuestionsButton").addEventListener("click", function () {
   let employeeID = document.getElementById("EmployeeID").value;
+  let startFrom = /* получить идентификатор текущего вопроса (CurrentQuestionID) из состояния приложения */;
   fetch('http://localhost:5000/load_questions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      'EmployeeID': employeeID
+      'EmployeeID': employeeID,
+      'startFrom': startFrom
     })
   })
     .then(response => response.json())
@@ -34,6 +22,8 @@ document.getElementById("loadQuestionsButton").addEventListener("click", functio
     })
     .catch(console.error);
 });
+
+
 
 // Обработчик изменения выбора задержки
 document.getElementById("delaySelect").addEventListener("change", function () {
@@ -156,4 +146,21 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   observeChat();
+});
+
+// Обработчик нажатия кнопки "Отправить случайное сообщение"
+document.getElementById("sendRandomButton").addEventListener("click", function () {
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    let randomNumber = Math.floor(Math.random() * 10000000000).toString().padStart(10, "0");
+    chrome.tabs.executeScript(tabs[0].id, {
+      code: `
+        var inputField = document.querySelector(".im_editable");
+        if (inputField) {
+          inputField.innerHTML = "${randomNumber}";
+          var event = new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true });
+          inputField.dispatchEvent(event);
+        }
+      `,
+    });
+  });
 });

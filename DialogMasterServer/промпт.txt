@@ -1,0 +1,158 @@
+необходимо прописать javascript-код который будет обеспечивать работу наших кнопок, функций, и связь с сервером. Клиентское расширение (JavaScript) общается с сервером (Python), который затем взаимодействует с базой данных mongodb 
+
+
+Коллекция "Questions_<EmployeeID>" (для вопросов):
+
+{
+  "_id": ObjectId,
+  "QuestionID": Number,
+  "QuestionText": String
+}
+Примеры коллекций: "Questions_1234", "Questions_5678" и т.д.
+
+Коллекция "Responses_<EmployeeID>" (для ответов):
+
+{
+  "_id": ObjectId,
+  "ProcessedQuestionID": Number,
+  "ProcessedQuestionText": String,
+  "AnswerText": String
+}
+Примеры коллекций: "Responses_1234", "Responses_5678" и т.д.
+
+Коллекция "State" (для состояния опроса):
+
+{
+  "_id": ObjectId,
+  "EmployeeID": Number,
+  "CurrentQuestionID": Number,
+  "RemainingQuestions": Number
+}
+
+
+У нас есть готовый дизайн на языке разметки HTML для нашего расширения. 
+
+Кнопка "Отправить случайное сообщение": Отправляет случайное число
+
+Идентификатор кнопки `sendRandomButton`
+
+document.getElementById("sendRandomButton").addEventListener("click", function () {
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    let randomNumber = Math.floor(Math.random() * 10000000000).toString().padStart(10, "0");
+    chrome.tabs.executeScript(tabs[0].id, {
+      code: `
+        var inputField = document.querySelector(".im_editable");
+        if (inputField) {
+          inputField.innerHTML = "${randomNumber}";
+          var event = new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true });
+          inputField.dispatchEvent(event);
+        }
+      `,
+    });
+  });
+});
+
+Наша кнопка `sendRandomButton` является актуальным примером работающего функционала по вводу сообщений в поле для ввода и отправки их нашему собеседнику. 
+
+
+Поле ввода "Вопросник №":  При открытии нашего расширения пользователь должен выбрать одну из коллекции Questions_<EmployeeID> с вопросами из нашей базы данных mongodb указав номер от 1 до 2560
+Авторизация не требуется. 
+
+   - Идентификатор поля ввода: `EmployeeID`
+
+Существует 2560 вариантов коллекции Questions_(EmployeeID) с вопросами. Как для примера они называются Questions_1234. В самих таблицах Questions_<EmployeeID> вопросы обозначаются как QuestionText, а номер вопроса обозначается как QuestionID. 
+
+Кнопка "ОК": Нужно нажать кнопку ОК чтобы подключить расширение к этой базе данных вопросов Questions_<EmployeeID>
+   - Идентификатор: `loadQuestionsButton`
+
+
+Поле выбора задержки: Так же есть возможность определить с какой скоростью наш чат бот будет отправлять сообщения. Изначально установлено 10 секунд стандартной задержки. Можно выбрать задержку от 8 секунд до 15 секунд.
+
+   - Идентификатор: `delaySelect`
+   - Выпадающий список:
+     - Содержит варианты задержки, представленные в элементах `<div class="custom-select-option">`
+     - Атрибут данных значений вариантов: `data-value`
+
+
+Кнопка "Продолжить": Чтобы продолжить работу нашего EmployeeID мы загружаем состояние из коллекции State. В этой коллекции указывается какой ответ на вопрос чат бот обработал в CurrentQuestionID для данного EmployeeID. А так же номер работника (вопросника) - EmployeeID.  
+
+   - Идентификатор: `continueButton`
+
+После этого мы подключаем нужную нам коллекцию Questions_<EmployeeID> для этого EmployeeID и начинаем по порядку отправлять наши вопросы из столбика QuestionText с порядковыми номерами QuestionID. После того как мы находим, что на нашей странице появились новые элементы содержащие сообщения нашего собеседника, и он закончил писать мы копируем его ответ для коллекции ответов на вопросы. Мы записываем полученные от собеседника ответы на наши вопросы. Результатом работы расширения является заполнение наших коллекций ответов Responses_<EmployeeID> Их будет 2560 например Responses_1234
+
+ В каждой коллекции Responses_<EmployeeID> у нас должно сохраняться:
+  ProcessedID - номер обработанного ответа
+  QuestionText - текст вопроса
+  AnswerText - текст ответа
+
+Нужно так же уточнять, что наши сообщения не являются нашими же вопросами из коллекции Questions_(EmployeeID) ЭТОГО EmployeeID ИЛИ ЖЕ ОТПРАВЛЕННЫМИ СЛУЧАЙНЫМИ ЦИФРАМИ С ПОМОЩЬЮ НАШЕЙ КНОПКИ sendRandomButton
+
+Вот пример нашего наблюдателя за новыми сообщениями
+
+document.addEventListener("DOMContentLoaded", function() {
+  let paused = false;
+
+  function observeChat() {
+    let observer = new MutationObserver(function(mutations) {
+      for (let mutation of mutations) {
+        for (let node of mutation.addedNodes) {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            let messageNode = node.querySelector(".im-mess--text.wall_module._im_log_body");
+            if (messageNode) {
+              let userMessage = messageNode.innerText;
+              if (userMessage) {
+                observer.disconnect();
+
+                fetch('http://localhost:5000/store_response', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    'message': userMessage
+                  })
+                })
+                  .then(response => {
+                    console.log("Response from server:", response);
+                    if (!paused) {
+                      observeChat(); // Re-observe chat after sending message
+                    }
+                  })
+                  .catch(console.error);
+                
+                break;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    let chatContainer = document.querySelector(".im-page--chat-body-wrap-inner-2");
+    observer.observe(chatContainer, { childList: true, subtree: true });
+  }
+
+  observeChat();
+});
+
+
+
+После получения каждого нового ответа на вопросы должны сохранять прогресс работы над конкретной коллекции ответов. Мы записываем в коллекции State сколько вопросов нам осталось задать, чтобы получить на них ответ в RemainingQuestions. И в самом расширении у нас должно отображаться состояние прохождения опроса. 
+
+   - `<p id="remainingQuestionNumber">`: Параграф для отображения оставшегося количества вопросов для этого EmployeeID
+   - `<p id="currentQuestionNumber">`: Параграф для отображения текущего номера вопроса для этого EmployeeID
+
+Кнопка "Приостановить": При нажатии кнопки Приостановить мы останавливаемся на текущем вопросе. И ставим наш опросник на паузу. 
+   - Идентификатор: `pauseButton` 
+
+
+Кнопка "Начать заново": При нажатии этой кнопки мы должны стереть все записи из коллекции Responses_(EmployeeID) этого EmployeeID и начать заполнять ответы и вопросы заново, с первого вопроса. В коллекции State мы обновляем наши значения оставшихся вопросов из коллекции Questions_(EmployeeID) записывая новое значение RemainingQuestions для данного EmployeeID и указываем что теперь текущий вопрос 0 в CurrentQuestionID
+
+ Идентификатор `resetButton`
+
+
+Кнопка "Скачать историю": Эта кнопка подготавливает файл для экспорта из расширения и скачивание в браузере, содержащий базу обработанных вопросов и ответы на них для данного EmployeeID из Responses_(EmployeeID) выводя информацию из ProcessedQuestionID, ProcessedQuestionText, AnswerText доступный для скачивания из расширения в формате .txt 
+
+В файле result.txt  должен указываться порядковый номер связки вопрос-ответ, а так же наш вопрос и полученный ответ. 
+
+Идентификатор `downloadHistoryButton`
