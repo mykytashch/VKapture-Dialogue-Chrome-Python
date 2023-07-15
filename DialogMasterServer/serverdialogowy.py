@@ -1,45 +1,9 @@
-from flask import Flask, request, jsonify
-from pymongo import MongoClient
+from flask import Flask, request, send_file, jsonify
+from pymongo import MongoClient, ASCENDING
+
 
 app = Flask(__name__)
 client = MongoClient('mongodb+srv://tosniki91:N25kbverb@clustervkapture.b6tox4s.mongodb.net/')
-
-# Обработчик для получения ответов от клиента и записи их в базу данных
-@app.route('/store_response', methods=['POST'])
-def store_response():
-    data = request.json
-    employee_id = data.get('EmployeeID')
-    processed_question_id = data.get('ProcessedQuestionID')
-    processed_question_text = data.get('ProcessedQuestionText')
-    answer_text = data.get('AnswerText')
-
-    db = client['response_database']
-    responses_collection = db[f'Responses_{employee_id}']
-    responses_collection.insert_one({
-        'ProcessedQuestionID': processed_question_id,
-        'ProcessedQuestionText': processed_question_text,
-        'AnswerText': answer_text
-    })
-
-    return 'Response recorded successfully', 200
-
-
-# Обработчик для загрузки вопросов для определенного EmployeeID
-@app.route('/load_questions', methods=['POST'])
-def load_questions():
-    data = request.json
-    employee_id = data.get('EmployeeID')
-    start_from = data.get('startFrom', 0)  # startFrom - это ID последнего вопроса, который был задан пользователю
-
-    db = client['question_database']
-    questions_collection = db[f'Questions_{employee_id}']
-    questions = list(questions_collection.find(
-        {'QuestionID': {'$gt': start_from}},
-        {'QuestionText': 1, 'QuestionID': 1, '_id': 0}
-    ).limit(100))
-
-    return jsonify({'questions': questions})
-
 
 # Обработчик для загрузки состояния опроса
 @app.route('/load_state', methods=['POST'])
@@ -66,6 +30,43 @@ def load_state():
             'CurrentQuestionID': 0,
             'RemainingQuestions': 100
         }, 200
+
+
+# Обработчик для загрузки вопросов для определенного EmployeeID
+@app.route('/load_questions', methods=['POST'])
+def load_questions():
+    data = request.json
+    employee_id = data.get('EmployeeID')
+    start_from = data.get('startFrom', 0)  # startFrom - это ID последнего вопроса, который был задан пользователю
+
+    db = client['question_database']
+    questions_collection = db[f'Questions_{employee_id}']
+    questions = list(questions_collection.find(
+        {'QuestionID': {'$gt': start_from}},
+        {'QuestionText': 1, 'QuestionID': 1, '_id': 0}
+    ).limit(100))
+
+    return jsonify({'questions': questions})
+
+
+# Обработчик для получения ответов от клиента и записи их в базу данных
+@app.route('/store_response', methods=['POST'])
+def store_response():
+    data = request.json
+    employee_id = data.get('EmployeeID')
+    processed_question_id = data.get('ProcessedQuestionID')
+    processed_question_text = data.get('ProcessedQuestionText')
+    answer_text = data.get('AnswerText')
+
+    db = client['response_database']
+    responses_collection = db[f'Responses_{employee_id}']
+    responses_collection.insert_one({
+        'ProcessedQuestionID': processed_question_id,
+        'ProcessedQuestionText': processed_question_text,
+        'AnswerText': answer_text
+    })
+
+    return 'Response recorded successfully', 200
 
 
 # Обработчик для сброса опроса
@@ -106,5 +107,4 @@ def download_history():
     return send_file('result.txt', as_attachment=True)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000 (debug=True)
-    app.run()
+    app.run(host='0.0.0.0', port=5000, debug=True)

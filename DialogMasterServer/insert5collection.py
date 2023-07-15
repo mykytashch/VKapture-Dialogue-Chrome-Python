@@ -1,6 +1,6 @@
 from pymongo import MongoClient
 
-client = MongoClient('mongodb+srv://tosniki91:password@clustervkapture.b6tox4s.mongodb.net/')
+client = MongoClient('mongodb+srv://tosniki91:N25kbverb@clustervkapture.b6tox4s.mongodb.net/')
 
 try:
     client.admin.command('ping')
@@ -8,7 +8,7 @@ try:
 except Exception as e:
     print(e)
 
-db = client['my_database']
+db = client['question_database']
 
 funny_questions = [
     {"QuestionID": 1, "QuestionText": "Если бы вы были фруктом, каким фруктом были бы и почему?"},

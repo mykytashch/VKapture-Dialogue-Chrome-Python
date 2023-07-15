@@ -7,11 +7,22 @@ document.getElementById("delaySelect").addEventListener("change", function () {
 });
 
 
-// Обработчик нажатия кнопки "ОК" для подключения к базе данных вопросов
+// Объявление переменной для хранения текущего вопроса
+let currentQuestionID;
 
+// Обработчик нажатия кнопки "ОК" для подключения к базе данных вопросов
 document.getElementById("loadQuestionsButton").addEventListener("click", function () {
   let employeeID = document.getElementById("EmployeeID").value;
-  let startFrom = /* получить идентификатор текущего вопроса (CurrentQuestionID) из состояния приложения */;
+
+  // Проверка, есть ли уже сохраненное состояние приложения
+  if (currentQuestionID) {
+    // Если есть, используем текущий вопрос как стартовый вопрос
+    startFrom = currentQuestionID;
+  } else {
+    // Если нет, начинаем с вопроса с ID = 0
+    startFrom = 0;
+  }
+
   fetch('http://localhost:5000/load_questions', {
     method: 'POST',
     headers: {
@@ -26,6 +37,10 @@ document.getElementById("loadQuestionsButton").addEventListener("click", functio
     .then(data => {
       // Обработка полученных вопросов
       console.log("Questions:", data.questions);
+      // Сохранение идентификатора текущего вопроса
+      if (data.questions.length > 0) {
+        currentQuestionID = data.questions[data.questions.length - 1].QuestionID;
+      }
     })
     .catch(console.error);
 });
@@ -48,9 +63,12 @@ document.getElementById("continueButton").addEventListener("click", function () 
       // Обработка полученного состояния
       console.log("Current Question ID:", data.CurrentQuestionID);
       console.log("Remaining Questions:", data.RemainingQuestions);
+      // Обновление идентификатора текущего вопроса
+      currentQuestionID = data.CurrentQuestionID;
     })
     .catch(console.error);
 });
+
 
 
 // Обработчик нажатия кнопки "Приостановить"
