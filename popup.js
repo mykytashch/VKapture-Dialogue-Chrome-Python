@@ -1,66 +1,130 @@
-document.addEventListener("DOMContentLoaded", function() {
-  // Переменные для состояния расширения
-  let employeeID = null;
-  let currentQuestionID = null;
-  let remainingQuestions = null;
-  let delay = 1000; // Стандартная задержка 10 секунд а тут 1 секунда
+
+// Обработчик изменения выбора задержки
+document.getElementById("delaySelect").addEventListener("change", function () {
+  let selectedDelay = document.getElementById("delaySelect").value;
+  // Действия при изменении задержки
+  console.log("Selected delay:", selectedDelay);
+});
+
+
+// Объявление переменной для хранения текущего вопроса
+let currentQuestionID;
+
+// Обработчик нажатия кнопки "ОК" для подключения к базе данных вопросов
+document.getElementById("loadQuestionsButton").addEventListener("click", function () {
+  let employeeID = document.getElementById("EmployeeID").value;
+
+  // Проверка, есть ли уже сохраненное состояние приложения
+  if (currentQuestionID) {
+    // Если есть, используем текущий вопрос как стартовый вопрос
+    startFrom = currentQuestionID;
+  } else {
+    // Если нет, начинаем с вопроса с ID = 0
+    startFrom = 0;
+  }
+
+  fetch('http://localhost:5000/load_questions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      'EmployeeID': employeeID,
+      'startFrom': startFrom
+    })
+  })
+    .then(response => response.json())
+    .then(data => {
+      // Обработка полученных вопросов
+      console.log("Questions:", data.questions);
+      // Сохранение идентификатора текущего вопроса
+      if (data.questions.length > 0) {
+        currentQuestionID = data.questions[data.questions.length - 1].QuestionID;
+      }
+    })
+    .catch(console.error);
+});
+
+
+// Обработчик нажатия кнопки "Продолжить"
+document.getElementById("continueButton").addEventListener("click", function () {
+  let employeeID = document.getElementById("EmployeeID").value;
+  fetch('http://localhost:5000/load_state', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      'EmployeeID': employeeID
+    })
+  })
+    .then(response => response.json())
+    .then(data => {
+      // Обработка полученного состояния
+      console.log("Current Question ID:", data.CurrentQuestionID);
+      console.log("Remaining Questions:", data.RemainingQuestions);
+      // Обновление идентификатора текущего вопроса
+      currentQuestionID = data.CurrentQuestionID;
+    })
+    .catch(console.error);
+});
+
+
+
+// Обработчик нажатия кнопки "Приостановить"
+document.getElementById("pauseButton").addEventListener("click", function () {
+  // Действия при нажатии кнопки "Приостановить"
+});
+
+// Обработчик нажатия кнопки "Начать заново"
+document.getElementById("resetButton").addEventListener("click", function () {
+  let employeeID = document.getElementById("EmployeeID").value;
+  fetch('http://localhost:5000/reset_survey', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      'EmployeeID': employeeID
+    })
+  })
+    .then(response => {
+      // Действия после сброса опроса
+    })
+    .catch(console.error);
+});
+
+// Обработчик нажатия кнопки "Скачать историю"
+document.getElementById("downloadHistoryButton").addEventListener("click", function () {
+  let employeeID = document.getElementById("EmployeeID").value;
+  fetch('http://localhost:5000/download_history', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      'EmployeeID': employeeID
+    })
+  })
+    .then(response => response.blob())
+    .then(blob => {
+      // Создание и загрузка файла истории
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'result.txt';
+      a.click();
+      window.URL.revokeObjectURL(url);
+    })
+    .catch(console.error);
+});
+
+// Обработчик наблюдения за новыми сообщениями
+document.addEventListener("DOMContentLoaded", function () {
   let paused = false;
 
-  // Функция для обновления состояния расширения
-  function updateExtensionState() {
-    document.getElementById("remainingQuestionNumber").innerText = remainingQuestions;
-    document.getElementById("currentQuestionNumber").innerText = currentQuestionID;
-  }
-
-  // Функция для загрузки вопросов по выбранному EmployeeID
-  function loadQuestions() {
-    employeeID = document.getElementById("employeeID").value;
-    if (employeeID) {
-      fetch(`http://localhost:5000/get_questions?EmployeeID=${employeeID}`)
-        .then(response => response.json())
-        .then(data => {
-          remainingQuestions = data.length;
-          currentQuestionID = 1;
-          updateExtensionState();
-        })
-        .catch(error => {
-          displayStatus("Ошибка при загрузке вопросов", "error");
-          console.error(error);
-        });
-    } else {
-      displayStatus("Введите номер вопросника", "error");
-    }
-  }
-
-  // Функция для отправки ответа на сервер
-  function sendResponse(message) {
-    fetch('http://localhost:5000/store_response', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        'employee_id': employeeID,
-        'question_text': document.getElementById("questionText").innerText,
-        'processed_id': currentQuestionID,
-        'message': message
-      })
-    })
-      .then(response => {
-        console.log("Ответ от сервера:", response);
-        if (!paused) {
-          observeChat(); // Возобновляем наблюдение за чатом после отправки сообщения
-        }
-      })
-      .catch(error => {
-        displayStatus("Ошибка при отправке ответа", "error");
-        console.error(error);
-      });
-  }
-
-  // Функция для обработки новых сообщений в чате
   function observeChat() {
-    let observer = new MutationObserver(function(mutations) {
+    let observer = new MutationObserver(function (mutations) {
       for (let mutation of mutations) {
         for (let node of mutation.addedNodes) {
           if (node.nodeType === Node.ELEMENT_NODE) {
@@ -69,7 +133,24 @@ document.addEventListener("DOMContentLoaded", function() {
               let userMessage = messageNode.innerText;
               if (userMessage) {
                 observer.disconnect();
-                sendResponse(userMessage);
+
+                fetch('http://localhost:5000/store_response', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    'message': userMessage
+                  })
+                })
+                  .then(response => {
+                    console.log("Response from server:", response);
+                    if (!paused) {
+                      observeChat(); // Re-observe chat after sending message
+                    }
+                  })
+                  .catch(console.error);
+
                 break;
               }
             }
@@ -82,123 +163,22 @@ document.addEventListener("DOMContentLoaded", function() {
     observer.observe(chatContainer, { childList: true, subtree: true });
   }
 
-  // Функция для отображения статуса во всплывающем окне
-  function displayStatus(message, type) {
-    let statusPopup = document.getElementById("statusPopup");
-    let statusMessage = document.getElementById("statusMessage");
-    statusMessage.innerText = message;
-
-    statusPopup.classList.remove("success", "error");
-    if (type === "success") {
-      statusPopup.classList.add("success");
-    } else if (type === "error") {
-      statusPopup.classList.add("error");
-    }
-
-    statusPopup.classList.add("active");
-
-    // Скрытие всплывающего окна через 5 секунд
-    setTimeout(function() {
-      statusPopup.classList.remove("active");
-    }, 5000);
-  }
-
-  // Обработчик нажатия кнопки "ОК" для загрузки вопросов
-  document.getElementById("loadQuestionsButton").addEventListener("click", function() {
-    loadQuestions();
-  });
-
-  // Обработчик нажатия кнопки "Продолжить" для возобновления опроса
-  document.getElementById("continueButton").addEventListener("click", function() {
-    if (employeeID && currentQuestionID && remainingQuestions) {
-      document.getElementById("employeeID").value = employeeID;
-      updateExtensionState();
-      observeChat();
-    } else {
-      displayStatus("Выберите вопросник и нажмите ОК", "error");
-    }
-  });
-
-  // Обработчик нажатия кнопки "Приостановить" для приостановки опроса
-  document.getElementById("pauseButton").addEventListener("click", function() {
-    paused = true;
-    displayStatus("Опрос приостановлен", "success");
-  });
-
-  // Обработчик нажатия кнопки "Начать заново" для сброса опроса
-  document.getElementById("resetButton").addEventListener("click", function() {
-    fetch('http://localhost:5000/reset', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        'employee_id': employeeID
-      })
-    })
-      .then(response => {
-        console.log("Ответ от сервера:", response);
-        remainingQuestions = null;
-        currentQuestionID = null;
-        updateExtensionState();
-        displayStatus("Опрос сброшен", "success");
-      })
-      .catch(error => {
-        displayStatus("Ошибка при сбросе опроса", "error");
-        console.error(error);
-      });
-  });
-
-  // Обработчик нажатия кнопки "Скачать историю" для экспорта ответов
-  document.getElementById("downloadHistoryButton").addEventListener("click", function() {
-    if (employeeID) {
-      fetch(`http://localhost:5000/export?employee_id=${employeeID}`)
-        .then(response => response.blob())
-        .then(blob => {
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.style.display = 'none';
-          a.href = url;
-          a.download = 'result.txt';
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-        })
-        .catch(error => {
-          displayStatus("Ошибка при экспорте истории", "error");
-          console.error(error);
-        });
-    } else {
-      displayStatus("Выберите вопросник и нажмите ОК", "error");
-    }
-  });
-
-  // Обработчик выбора задержки
-  document.getElementById("delaySelect").addEventListener("change", function() {
-    delay = parseInt(this.value);
-    displayStatus(`Задержка установлена на ${delay / 1000} сек.`, "success");
-  });
-
-  // Функция для отправки случайного сообщения
-  function sendRandomMessage() {
-    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-      let randomNumber = Math.floor(Math.random() * 10000000000).toString().padStart(10, "0");
-      chrome.tabs.executeScript(tabs[0].id, {
-        code: `
-          var inputField = document.querySelector(".im_editable");
-          if (inputField) {
-            inputField.innerHTML = "${randomNumber}";
-            var event = new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true });
-            inputField.dispatchEvent(event);
-          }
-        `,
-      });
-    });
-  }
-
-  // Обработчик нажатия кнопки "Отправить случайное сообщение"
-  document.getElementById("sendRandomButton").addEventListener("click", function() {
-    sendRandomMessage();
-  });
+  observeChat();
 });
 
+// Обработчик нажатия кнопки "Отправить случайное сообщение"
+document.getElementById("sendRandomButton").addEventListener("click", function () {
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    let randomNumber = Math.floor(Math.random() * 10000000000).toString().padStart(10, "0");
+    chrome.tabs.executeScript(tabs[0].id, {
+      code: `
+        var inputField = document.querySelector(".im_editable");
+        if (inputField) {
+          inputField.innerHTML = "${randomNumber}";
+          var event = new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true });
+          inputField.dispatchEvent(event);
+        }
+      `,
+    });
+  });
+});
