@@ -1,0 +1,30 @@
+{
+  "manifest_version": 2,
+  "name": "VK Read Extension",
+  "version": "0.1",
+  "description": "Отправляем наши запросы пользователю в диалоге, записываем базу его ответов на наши запросы",
+  "permissions": [
+    "tabs",
+    "storage",
+    "http://localhost:5000/*",
+    "https://vk.com/*"
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "browser_action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://vk.com/*"],
+      "js": ["popup.js"]
+    }
+  ]
+}
