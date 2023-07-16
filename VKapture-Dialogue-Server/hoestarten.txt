@@ -1,0 +1,27 @@
+Hier is een korte beschrijving van de stappen in het Nederlands:
+
+1. Open de opdrachtprompt (command prompt) of terminal.
+2. Gebruik de `cd`-opdracht om naar de map te navigeren waarin het bestand `VKaptureDialogueChromePython.py` zich bevindt. De opdracht ziet er als volgt uit:
+```
+windows:
+
+cd C:\Users\New\Desktop\VKaptureProject\FlaskServer
+
+mac os:
+
+cd /Users/mykyta/Desktop/VKapture-Dialogue-Chrome-Python-main/DialogMasterServer
+
+
+```
+3. Bouw het Docker-image met de naam "VKaptureProject" met behulp van de volgende opdracht:
+```
+docker build -t VKaptureProject .
+```
+4. Wacht tot het Docker-image is gebouwd. Dit kan enige tijd duren, afhankelijk van de grootte van het project en de aanwezige afhankelijkheden.
+5. Voer de volgende opdracht uit om een Docker-container te starten op basis van het gebouwde image en de poort 5000 door te sturen naar de lokale machine:
+```
+docker run -p 5000:5000 VKaptureProject
+```
+6. Uw Flask-toepassing zou nu moeten draaien in een Docker-container. U kunt toegang krijgen tot de toepassing via http://localhost:5000.
+
+Zorg ervoor dat Docker is geïnstalleerd en correct werkt op uw machine voordat u deze stappen uitvoert.

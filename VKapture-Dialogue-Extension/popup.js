@@ -1,3 +1,4 @@
+document.addEventListener("DOMContentLoaded", function () {
 
 // Обработчик изменения выбора задержки
 document.getElementById("delaySelect").addEventListener("change", function () {
@@ -181,4 +182,5 @@ document.getElementById("sendRandomButton").addEventListener("click", function (
       `,
     });
   });
+});
 });
