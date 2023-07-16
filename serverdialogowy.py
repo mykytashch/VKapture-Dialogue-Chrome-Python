@@ -1,8 +1,17 @@
-from flask import Flask, request, jsonify
-from pymongo import MongoClient
+from flask import Flask, request, send_file, jsonify
+from pymongo import MongoClient, ASCENDING
+from bson import ObjectId
+import json
 
 app = Flask(__name__)
 client = MongoClient('mongodb+srv://tosniki91:N25kbverb@clustervkapture.b6tox4s.mongodb.net/')
+
+# JSON-кодировщик для обработки ObjectId
+class JSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, ObjectId):
+            return str(o)  # Преобразование ObjectId в строку
+        return super().default(o)
 
 # Обработчик для загрузки состояния опроса
 @app.route('/load_state', methods=['POST'])
@@ -13,20 +22,24 @@ def load_state():
     db = client['state_database']
     state_collection = db['State']
     state = state_collection.find_one({'EmployeeID': employee_id}, {'_id': 0})
+
     if state:
-        return jsonify({
+        response_data = {
             'CurrentQuestionID': state.get('CurrentQuestionID'),
             'RemainingQuestions': state.get('RemainingQuestions')
-        }), 200
+        }
+        response_json = json.dumps(response_data, cls=JSONEncoder, indent=2)  # Преобразование в отформатированную строку JSON
+        return response_json, 200, {'Content-Type': 'application/json'}  # Установка правильного заголовка Content-Type
     else:
-        # Создание нового состояния, если не найдено
         new_state = {
             'EmployeeID': employee_id,
             'CurrentQuestionID': 0,
-            'RemainingQuestions': 100  # Общее количество вопросов
+            'RemainingQuestions': 100
         }
         state_collection.insert_one(new_state)
-        return jsonify(new_state), 200
+        response_json = json.dumps(new_state, cls=JSONEncoder, indent=2)  # Преобразование в отформатированную строку JSON
+        return response_json, 200, {'Content-Type': 'application/json'}  # Установка правильного заголовка Content-Type
+
 
 
 # Обработчик для загрузки вопросов для определенного EmployeeID
@@ -104,4 +117,5 @@ def download_history():
     return send_file('result.txt', as_attachment=True)
 
 if __name__ == '__main__':
+    app.json_encoder = JSONEncoder  # Использование кастомного JSON-кодировщика
     app.run(host='0.0.0.0', port=5000, debug=True)
