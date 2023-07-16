@@ -33,7 +33,7 @@ def load_state():
     else:
         new_state = {
             'EmployeeID': employee_id,
-            'CurrentQuestionID': 0,
+            'CurrentQuestionID': 1,
             'RemainingQuestions': 100
         }
         state_collection.insert_one(new_state)
@@ -60,8 +60,8 @@ def load_questions():
 
 
 # Обработчик для получения ответов от клиента и записи их в базу данных
-@app.route('/store_response', methods=['POST'])
-def store_response():
+@app.route('/store_responseCOMENT', methods=['POST'])
+def store_responseCOMENT():
     data = request.json
     employee_id = data.get('EmployeeID')
     processed_question_id = data.get('ProcessedQuestionID')
@@ -115,6 +115,15 @@ def download_history():
         file.write(file_contents)
 
     return send_file('result.txt', as_attachment=True)
+
+
+@app.route('/store_response', methods=['POST'])
+def store_response():
+    data = request.get_json()  # получаем JSON из запроса
+    message = data.get('message')  # извлекаем поле 'message' из данных JSON
+    print(message)  # выводим сообщение в консоль
+    return {}, 200  # возвращаем ответ со статусом 200 (OK)
+
 
 if __name__ == '__main__':
     app.json_encoder = JSONEncoder  # Использование кастомного JSON-кодировщика
