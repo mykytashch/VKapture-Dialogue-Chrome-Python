@@ -114,10 +114,9 @@ For any inquiries or questions, you can reach us at [mykytashch@hotmail.com](mai
 
 ## Author
 
-- Mykyta Shcheholevatyi
+VKapture Dialogue is developed by Mykyta Shcheholevatyi
 
 We would like to express our gratitude to all the contributors who helped make this project possible.
 
 Thank you for using the DialogMasterExtension!
-
 
