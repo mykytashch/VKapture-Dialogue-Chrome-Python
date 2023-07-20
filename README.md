@@ -1,6 +1,12 @@
 # VKapture Dialogue 
 
 
+[![GitHub Follow](https://img.shields.io/github/followers/mykytashch?style=social)](https://github.com/mykytashch)
+[![GitHub Stars](https://img.shields.io/github/stars/mykytashch/SynchroMessage)](https://github.com/mykytashch/SynchroMessage/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/mykytashch/SynchroMessage)](https://github.com/mykytashch/SynchroMessage/network)
+
+
+
 Конечно, я попытаюсь сформулировать планы реализации так, чтобы они были максимально понятны и информативны.
 
 **Часть 1: Python и MongoDB**
